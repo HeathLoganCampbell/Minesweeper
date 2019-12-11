@@ -12,7 +12,6 @@ let SAFE_COLOR;
 let WORD_COLOR;
 let SELECT_COLOR;
 
-let bombsLocations = [];
 let tileLocations = [];
 
 
@@ -24,6 +23,7 @@ function setup()
    SAFE_COLOR = color(0, 255, 125);
    WORD_COLOR = color(55, 55, 55)
    SELECT_COLOR = color(15, 255, 22)
+   HIDDEN_COLOR = color(150)
 
    //init map
    for(var x = 0; x < MAP_SIZE; x++)
@@ -31,7 +31,7 @@ function setup()
       row = [];
       for(var y = 0; y < MAP_SIZE; y++)
       {
-         row.push(0 | SAFE_BIT)
+         row.push(0 | HIDDEN_BIT)
       }
       tileLocations.push(row)
    }
@@ -40,9 +40,10 @@ function setup()
    {
       let x =  Math.floor(Math.random() * MAP_SIZE);
       let y = Math.floor(Math.random() * MAP_SIZE);
-      var currentTile = getTile(x, y)
-      setTile(x, y, currentTile | BOMB_BIT)
+      var currentTile = getTile(x, y);
+      setTile(x, y, currentTile | BOMB_BIT);
    }
+   console.log(tileLocations)
 }
 
 /**
@@ -65,13 +66,23 @@ function draw()
          fill(SAFE_COLOR);
          if(isBomb(x, y))
             fill(BOMB_COLOR)
+         if(isHidden(x, y))
+            fill(HIDDEN_COLOR)
          
          if(mouseX < (x+1) * TILE_SIZE && mouseX > (x) * TILE_SIZE
          && mouseY < (y+1) * TILE_SIZE && mouseY > (y) * TILE_SIZE)
-            fill(SELECT_COLOR)
+         {
+            if(mouseIsPressed)
+            {
+               fill(SELECT_COLOR)
+               var currentTile = getTile(x, y)
+               setTile(x, y, currentTile & ~HIDDEN_BIT)
+               console.log("Updated bit " + getTile(x, y) )
+            }
+         }
 
          rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
-         if(isSafe(x, y))
+         if(!isHidden(x, y) && !isBomb(x, y))
          {
             fill(WORD_COLOR)
             text(nearbyBombCount(x, y), x * TILE_SIZE + (TILE_SIZE/2), y * TILE_SIZE + TILE_SIZE - (TILE_SIZE/2) );
@@ -99,7 +110,7 @@ function nearbyBombCount(x, y)
          //if not the position it's self
          if(offsetX == 0 && offsetY == 0)
             continue;
-         if(isSafe(x + offsetX, y + offsetY))
+         if(isBomb(x + offsetX, y + offsetY))
          {
             bombCount++; 
          }
@@ -115,7 +126,9 @@ function setTile(x, y, value)
 
 function getTile(x, y)
 {
-   return tileLocations[y][x];
+   var row = tileLocations[y];
+   if(row == undefined) return null;
+   return row[x];
 }
 
 function isBomb(x, y)
@@ -125,10 +138,10 @@ function isBomb(x, y)
 
 function isSafe(x, y)
 {
-   return this.getTile(x, y) & SAFE_COLOR;
+   return this.getTile(x, y) & SAFE_BIT;
 }
 
 function isHidden(x, y)
 {
-   return this.getTile(x, y) & HIDDEN_BIT;
+   return (this.getTile(x, y) & HIDDEN_BIT);
 }
