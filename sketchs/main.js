@@ -1,7 +1,7 @@
-const TILE_SIZE = 60;
-const MAP_SIZE = 10;
+const TILE_SIZE = 40;
+const MAP_SIZE = 2;
 const MAP_AREA = MAP_SIZE * MAP_SIZE;
-const BOMB_PRECENTAGE = 0.10;
+const BOMB_PRECENTAGE = 0.20;
 /**
 Bits
 1: hidden
@@ -21,6 +21,7 @@ let WORD_COLOR;
 let SELECT_COLOR;
 
 let tileLocations = [];
+let hasWon = false;
 
 
 function setup() 
@@ -98,6 +99,8 @@ function draw()
                var currentTile = getTile(x, y)
                setTile(x, y, currentTile & ~HIDDEN_BIT)
                comboUncover(x, y, 0);
+               if(hasWon || checkWin())
+                  hasWon = true;
             }
          }
 
@@ -111,6 +114,11 @@ function draw()
          }
       }
       text(mouseX + " " + mouseY, 50, 50);
+      if(hasWon)
+      {
+         fill(SELECT_COLOR)
+         text("YOU WIN", 50, 80);
+      }
 }
 
 function windowResized() {
@@ -184,7 +192,7 @@ function comboUncover(x, y, lastBombCount)
       setTile(x, y, currentTile & ~HIDDEN_BIT)
    }
 
-   if(getBombNearby(x, y) != 0)
+   if(getBombNearby(x, y) != 0 || isBomb(x, y))
       return;   
 
    for(var offsetX = -1; offsetX < 2; offsetX++)
@@ -194,17 +202,18 @@ function comboUncover(x, y, lastBombCount)
             continue;
          if(isHidden(x + offsetX, y + offsetY) && ( lastBombCount == 0) && !isBomb(x + offsetX, y + offsetY))
             comboUncover(x + offsetX, y + offsetY, getBombNearby(x + offsetX, y + offsetY))
+      }  
+}
+
+function checkWin()
+{
+   for(var x = 0; x < MAP_SIZE; x++ )
+      for(var y = 0; y < MAP_SIZE; y++ )
+      {
+         if(isHidden(x, y) && !isBomb(x, y))
+            return false;
+         if(!isHidden(x, y) && isBomb(x, y))
+            return false;
       }
-   //    {
-   //       //if not the position it's self
-   //       if(offsetX == 0 && offsetY == 0)
-   //          continue;
-         
-   //       if(isHidden(x + offsetX, y + offsetY) && getBombNearby(x + offsetX, y + offsetY) == 0)
-   //          comboUncover(x + offsetX, y + offsetY)
-   //       // if(isBomb(x + offsetX, y + offsetY))
-   //       // {
-   //       //    bombCount++; 
-   //       // }
-   //    }
+   return true;
 }
