@@ -97,7 +97,7 @@ function draw()
                fill(SELECT_COLOR)
                var currentTile = getTile(x, y)
                setTile(x, y, currentTile & ~HIDDEN_BIT)
-               console.log("Updated bit " + getTile(x, y) )
+               comboUncover(x, y, 0);
             }
          }
 
@@ -143,7 +143,9 @@ function nearbyBombCount(x, y)
 
 function setTile(x, y, value)
 {
-   return tileLocations[y][x] = value;
+   if(y >= tileLocations.length || y < 0) return;
+   if(x >= tileLocations[y].length || x < 0) return;
+   tileLocations[y][x] = value;
 }
 
 function getTile(x, y)
@@ -168,17 +170,41 @@ function isHidden(x, y)
    return (this.getTile(x, y) & HIDDEN_BIT);
 }
 
-function comboUncover(x, y)
+function getBombNearby(x, y)
 {
-   for(var offsetX = -1; offsetX < 2; offsetX++)
-   for(var offsetY = -1; offsetY < 2; offsetY++)
+   var currentTile = getTile(x, y);
+   return (currentTile & BOMB_NEARBY_MASK) >> 4;
+}
+
+function comboUncover(x, y, lastBombCount)
+{
+   if(isHidden(x, y))
    {
-      //if not the position it's self
-      if(offsetX == 0 && offsetY == 0)
-         continue;
-      if(isBomb(x + offsetX, y + offsetY))
-      {
-         bombCount++; 
-      }
+      var currentTile = getTile(x , y )
+      setTile(x, y, currentTile & ~HIDDEN_BIT)
    }
+
+   if(getBombNearby(x, y) != 0)
+      return;   
+
+   for(var offsetX = -1; offsetX < 2; offsetX++)
+      for(var offsetY = -1; offsetY < 2; offsetY++)
+      {
+         if(offsetX == 0 && offsetY == 0)
+            continue;
+         if(isHidden(x + offsetX, y + offsetY) && ( lastBombCount == 0) && !isBomb(x + offsetX, y + offsetY))
+            comboUncover(x + offsetX, y + offsetY, getBombNearby(x + offsetX, y + offsetY))
+      }
+   //    {
+   //       //if not the position it's self
+   //       if(offsetX == 0 && offsetY == 0)
+   //          continue;
+         
+   //       if(isHidden(x + offsetX, y + offsetY) && getBombNearby(x + offsetX, y + offsetY) == 0)
+   //          comboUncover(x + offsetX, y + offsetY)
+   //       // if(isBomb(x + offsetX, y + offsetY))
+   //       // {
+   //       //    bombCount++; 
+   //       // }
+   //    }
 }
