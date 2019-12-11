@@ -1,17 +1,48 @@
-/**
- * You can find all function that you can use in 
- * p5.js from this site https://p5js.org/reference/
- */
-const TEXT_RADIUS = 100;
-const TEXT_ORBIT_SPEED = 30;//bigger the slower
-const TEXT_SIZE = 25;
+const TILE_SIZE = 60;
+const MAP_SIZE = 10;
+const MAP_AREA = MAP_SIZE * MAP_SIZE;
+const BOMB_PRECENTAGE = 0.10;
 
-/**
- * Called once when the program is started
- */
+const HIDDEN_BIT = 0b0001;
+const SAFE_BIT = 0b0010;
+const BOMB_BIT = 0b0100;
+
+let BOMB_COLOR;
+let SAFE_COLOR;
+let WORD_COLOR;
+let SELECT_COLOR;
+
+let bombsLocations = [];
+let tileLocations = [];
+
+
 function setup() 
 {
    createCanvas(windowWidth, windowHeight);
+
+   BOMB_COLOR = color(255, 0, 0);
+   SAFE_COLOR = color(0, 255, 125);
+   WORD_COLOR = color(55, 55, 55)
+   SELECT_COLOR = color(15, 255, 22)
+
+   //init map
+   for(var x = 0; x < MAP_SIZE; x++)
+   {
+      row = [];
+      for(var y = 0; y < MAP_SIZE; y++)
+      {
+         row.push(0 | SAFE_BIT)
+      }
+      tileLocations.push(row)
+   }
+
+   for(var i = 0; i < Math.ceil(MAP_AREA * BOMB_PRECENTAGE); i++)
+   {
+      let x =  Math.floor(Math.random() * MAP_SIZE);
+      let y = Math.floor(Math.random() * MAP_SIZE);
+      var currentTile = getTile(x, y)
+      setTile(x, y, currentTile | BOMB_BIT)
+   }
 }
 
 /**
@@ -23,17 +54,81 @@ function draw()
    //Background (R, G, B)
    background(234, 180, 150);
 
-   var x = TEXT_RADIUS * Math.cos(frameCount / TEXT_ORBIT_SPEED);
-   var y = TEXT_RADIUS * Math.sin(frameCount / TEXT_ORBIT_SPEED);
+   textAlign(CENTER, CENTER);
 
-   // Offset, moves it to the center (kinda, I don't acount of length of string)
-   x +=  width / 2;
-   y += height / 2;
+   
 
-   textSize(TEXT_SIZE);
-   text("P5 js boilerplate", x, y);
+   for(var x = 0; x < MAP_SIZE; x++ )
+      for(var y = 0; y < MAP_SIZE; y++ )
+      {
+         // fill(BOMB_COLOR)
+         fill(SAFE_COLOR);
+         if(isBomb(x, y))
+            fill(BOMB_COLOR)
+         
+         if(mouseX < (x+1) * TILE_SIZE && mouseX > (x) * TILE_SIZE
+         && mouseY < (y+1) * TILE_SIZE && mouseY > (y) * TILE_SIZE)
+            fill(SELECT_COLOR)
+
+         rect(x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE);
+         if(isSafe(x, y))
+         {
+            fill(WORD_COLOR)
+            text(nearbyBombCount(x, y), x * TILE_SIZE + (TILE_SIZE/2), y * TILE_SIZE + TILE_SIZE - (TILE_SIZE/2) );
+         }
+      }
+      text(mouseX + " " + mouseY, 50, 50);
 }
 
 function windowResized() {
    resizeCanvas(windowWidth, windowHeight);
+}
+
+/*
+======================================
+   FUNCTIONS USED BY THE GAME
+======================================
+*/
+
+function nearbyBombCount(x, y)
+{
+   var bombCount = 0;
+   for(var offsetX = -1; offsetX < 2; offsetX++)
+      for(var offsetY = -1; offsetY < 2; offsetY++)
+      {
+         //if not the position it's self
+         if(offsetX == 0 && offsetY == 0)
+            continue;
+         if(isSafe(x + offsetX, y + offsetY))
+         {
+            bombCount++; 
+         }
+      }
+   return bombCount;
+}
+
+
+function setTile(x, y, value)
+{
+   return tileLocations[y][x] = value;
+}
+
+function getTile(x, y)
+{
+   return tileLocations[y][x];
+}
+
+function isBomb(x, y)
+{
+   return this.getTile(x, y) & BOMB_BIT;
+}
+
+function isSafe(x, y)
+{
+   return this.getTile(x, y) & SAFE_COLOR;
+}
+
+function isHidden(x, y)
+{
+   return this.getTile(x, y) & HIDDEN_BIT;
 }
