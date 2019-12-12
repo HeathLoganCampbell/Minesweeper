@@ -1,5 +1,5 @@
 const TILE_SIZE = 40;
-const MAP_SIZE = 2;
+const MAP_SIZE = 19;
 const MAP_AREA = MAP_SIZE * MAP_SIZE;
 const BOMB_PRECENTAGE = 0.20;
 /**
@@ -14,6 +14,9 @@ const SAFE_BIT = 0b0010;
 const BOMB_BIT = 0b0100;
 
 const BOMB_NEARBY_MASK = 0b111000;
+
+const BORDER_OFFSET_X = 50;
+const BORDER_OFFSET_Y = 50;
 
 let BOMB_COLOR;
 let SAFE_COLOR;
@@ -75,6 +78,7 @@ function draw()
    //Background (R, G, B)
    background(234, 180, 150);
 
+   translate(BORDER_OFFSET_X, BORDER_OFFSET_Y);
    textAlign(CENTER, CENTER);
 
    
@@ -90,8 +94,8 @@ function draw()
             fill(HIDDEN_COLOR)
          
         
-         if(mouseX < (x+1) * TILE_SIZE && mouseX > (x) * TILE_SIZE
-         && mouseY < (y+1) * TILE_SIZE && mouseY > (y) * TILE_SIZE)
+         if(mouseX - BORDER_OFFSET_X < (x+1) * TILE_SIZE && mouseX - BORDER_OFFSET_X > (x) * TILE_SIZE
+         && mouseY - BORDER_OFFSET_Y < (y+1) * TILE_SIZE && mouseY - BORDER_OFFSET_Y > (y) * TILE_SIZE)
          {
             if(mouseIsPressed)
             {
@@ -110,7 +114,8 @@ function draw()
             var currentTile = getTile(x, y)
             var bombCount = (currentTile & BOMB_NEARBY_MASK) >> 4;
             fill(WORD_COLOR)
-            text(bombCount, x * TILE_SIZE + (TILE_SIZE/2), y * TILE_SIZE + TILE_SIZE - (TILE_SIZE/2) );
+            if(bombCount != 0)
+               text(bombCount, x * TILE_SIZE + (TILE_SIZE/2), y * TILE_SIZE + TILE_SIZE - (TILE_SIZE/2) );
          }
       }
       text(mouseX + " " + mouseY, 50, 50);
