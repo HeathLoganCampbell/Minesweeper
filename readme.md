@@ -13,3 +13,7 @@ A simple minesweeper game written in P5.js
 
 
 ## Video
+
+## Versions
+### 1.0
+![version 1.0](./readme-reousrces/website.png)
